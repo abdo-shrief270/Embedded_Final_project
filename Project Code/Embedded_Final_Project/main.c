@@ -19,7 +19,6 @@
 #include "DIO_interface.h"
 #include "LCD_interface.h"
 #include "KPD_interface.h"
-#include <stdbool.h>
 
 // Define Micro-controller's frequency = 16MHz
 
@@ -27,6 +26,14 @@
 
 // Include delay library
 #include <util/delay.h>
+#define rw_port			GPIOC
+#define rw_pin			PIN0
+#define sev_seg_port	GPIOA
+#define buz_port		GPIOD
+#define buz_pin			PIN0
+#define key_pad_port	GPIOB
+
+char char_arr[10]={0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90};
 
 // Declaring our global variables //
 u8 BRAIN_TEST_OPTION ;
@@ -65,8 +72,8 @@ u8 triesCount(u8 tries);
 int main(void)
 {
 	// Initialization //
-	DIO_vidSetPinMode(GPIOC,PIN0,OUTPUT);
-	DIO_vidWritePin(GPIOC,PIN2,LOW);
+	DIO_vidSetPinMode(rw_port,rw_pin,OUTPUT);
+	DIO_vidWritePin(rw_port,rw_pin,LOW);
 	Init();
 	LCD_voidDisplayString4bit("   Welcome :)   ");
 	_delay_ms(500);
@@ -296,7 +303,7 @@ void END_CALCULATOR(s64 result){
 void BRAIN_TEST(){
 	
 	tries = 3;
-	DIO_vidWriteLowNibble(GPIOA,tries);
+	DIO_vidWritePort(sev_seg_port,char_arr[tries]);
 	Brain_Test:
 	LCD_vidClearScreen4bit();
 	LCD_voidDisplayString4bit("Choose a mode");
@@ -418,7 +425,7 @@ void showLogicEquation(u8 num1[], u8 num2[], const char* gateName){
 	
 	LCD_vidClearScreen4bit();
 	disBinNum(num1);
-	LCD_voidDisplayString4bit(" AND ");
+	LCD_voidDisplayString4bit(gateName);
 	disBinNum(num2);
 	LCD_vidMoveCursor4bit(2,1);
 
@@ -435,6 +442,7 @@ void getLogicResult(u8 result[],u8 * cond){
 			if (SEL=='C')
 			{
 				BRAIN_TEST_RAND_OPTION=1;
+				*cond=2;
 				LCD_vidClearScreen4bit();
 				_delay_ms(500);
 				return;
@@ -459,11 +467,11 @@ void BRAIN_TEST_LOGIC()
 	u8 temp,i,num1[4],num2[4],res[4],SEL,REAL_RES[4],count;
 	Brain_Test_rand_logic:
 	tries = 3;
-	DIO_vidWriteLowNibble(GPIOA,tries);
+	DIO_vidWritePort(sev_seg_port,char_arr[tries]);
 	LCD_vidClearScreen4bit();
 	LCD_vidMoveCursor4bit(1,1);
 	temp = rand()%6;
-	bool cond= true;
+	char cond= 1;
 	i = 0;
 	while (i<4)
 	{
@@ -482,11 +490,14 @@ void BRAIN_TEST_LOGIC()
 		cond = TRUE;
 		showLogicEquation(num1,num2," AND ");
 		getLogicResult(REAL_RES,&cond);
-		if (cond)
+		if (cond == 1)
 		{
 			LCD_voidDisplayString4bit(" Correct Ans :) ");
-			DIO_vidWriteLowNibble(GPIOA,tries);
-		}else{
+			DIO_vidWritePort(sev_seg_port,char_arr[tries]);
+		}else if (cond==2){
+			return;
+		}
+		else{
 			count = triesCount(tries);
 			if(count == 0)
 			{
@@ -508,11 +519,13 @@ void BRAIN_TEST_LOGIC()
 		cond = TRUE;
 		showLogicEquation(num1,num2," OR ");
 		getLogicResult(REAL_RES,&cond);
-		if (cond)
+		if (cond == 1)
 		{
 			LCD_voidDisplayString4bit(" Correct Ans :) ");
-			DIO_vidWriteLowNibble(GPIOA,tries);
-			}else{
+			DIO_vidWritePort(sev_seg_port,char_arr[tries]);
+		}else if (cond==2){
+			return;
+		}else{
 			count = triesCount(tries);
 			if(count == 0)
 			{
@@ -534,11 +547,13 @@ void BRAIN_TEST_LOGIC()
 		cond = TRUE;
 		showLogicEquation(num1,num2," NAND ");
 		getLogicResult(REAL_RES,&cond);
-		if (cond)
+		if (cond == 1)
 		{
 			LCD_voidDisplayString4bit(" Correct Ans :) ");
-			DIO_vidWriteLowNibble(GPIOA,tries);
-			}else{
+			DIO_vidWritePort(sev_seg_port,char_arr[tries]);
+		}else if (cond==2){
+			return;
+		}else{
 			count = triesCount(tries);
 			if(count == 0)
 			{
@@ -560,12 +575,13 @@ void BRAIN_TEST_LOGIC()
 		cond = TRUE;
 		showLogicEquation(num1,num2," NOR ");
 		getLogicResult(REAL_RES,&cond);
-		if (cond)
+		if (cond == 1)
 		{
 			LCD_voidDisplayString4bit(" Correct Ans :) ");
-			DIO_vidWriteLowNibble(GPIOA,tries);
-		}
-		else
+			DIO_vidWritePort(sev_seg_port,char_arr[tries]);
+		}else if (cond==2){
+			return;
+		}else
 		{
 			count = triesCount(tries);
 			if(count == 0)
@@ -587,11 +603,13 @@ void BRAIN_TEST_LOGIC()
 		cond = TRUE;
 		showLogicEquation(num1,num2," XOR ");
 		getLogicResult(REAL_RES,&cond);
-		if (cond)
+		if (cond == 1)
 		{
 			LCD_voidDisplayString4bit(" Correct Ans :) ");
-			DIO_vidWriteLowNibble(GPIOA,tries);
-			}else{
+			DIO_vidWritePort(sev_seg_port,char_arr[tries]);
+		}else if (cond==2){
+			return;
+		}else{
 			count = triesCount(tries);
 			if(count == 0)
 			{
@@ -614,11 +632,13 @@ void BRAIN_TEST_LOGIC()
 		showLogicEquation(num1,num2," XNOR ");
 		getLogicResult(REAL_RES,&cond);
 		
-		if (cond)
+		if (cond == 1)
 		{
 			LCD_voidDisplayString4bit(" Correct Ans :) ");
-			DIO_vidWriteLowNibble(GPIOA,tries);
-			}else{
+			DIO_vidWritePort(sev_seg_port,char_arr[tries]);
+		}else if (cond==2){
+			return;
+		}else{
 			count = triesCount(tries);
 			if(count == 0)
 			{
@@ -653,7 +673,7 @@ void BRAIN_TEST_ARTH() {
 	// Label to allow going back to generate new numbers
 	Brain_Test_rand_arth:
 	tries = 3; // Number of tries allowed
-	DIO_vidWriteLowNibble(GPIOA, tries);
+	DIO_vidWritePort(sev_seg_port, char_arr[tries]);
 	num1 = rand() % 101; // Random number generation for operand 1
 	num2 = rand() % 101; // Random number generation for operand 2
 	temp = rand() % 4; // Random operation (+, -, *, %)
@@ -745,9 +765,9 @@ void ArthWrongAnswer(u32 res){
 		
 	LCD_vidClearScreen4bit();
 	LCD_voidDisplayString4bit("Wrong Answer:(");
-	DIO_vidWritePin(GPIOA,PIN4,HIGH);
+	DIO_vidWritePin(buz_port,buz_pin,HIGH);
 	_delay_ms(500);
-	DIO_vidWritePin(GPIOA,PIN4,LOW);
+	DIO_vidWritePin(buz_port,buz_pin,LOW);
 	LCD_vidClearScreen4bit();
 	LCD_voidDisplayString4bit("Correct Ans is");
 	LCD_vidMoveCursor4bit(2,1);
@@ -759,9 +779,9 @@ void ArthWrongAnswer(u32 res){
 void LogicWrongAnswer(u8* res){
 	LCD_vidClearScreen4bit();
 	LCD_voidDisplayString4bit("  Wrong Ans :(  ");
-	DIO_vidWritePin(GPIOA,PIN4,HIGH);
+	DIO_vidWritePin(buz_port,buz_pin,HIGH);
 	_delay_ms(500);
-	DIO_vidWritePin(GPIOA,PIN4,LOW);
+	DIO_vidWritePin(buz_port,buz_pin,LOW);
 	LCD_vidClearScreen4bit();
 	LCD_voidDisplayString4bit("Correct Ans is");
 	LCD_vidMoveCursor4bit(2,1);
@@ -777,9 +797,6 @@ unsigned int binToDec(char *binary) {
 	unsigned int decimal = 0;
 	for (int i = 0; binary[i]!='\0'; i++) {
 		decimal = decimal * 2 + (binary[i] - '0');
-		LCD_vidClearScreen4bit();
-		LCD_vidDisplayNumber4bit(decimal);
-		_delay_ms(500);
 	}
 	return (unsigned)decimal;
 }
@@ -798,9 +815,9 @@ u8 getFromKeypad(){
 		u8 SEL;
 		do
 		{
-			SEL = KPD_u8GetPressedKey(GPIOB,LOW_NIBBLE,HIGH_NIBBLE);
+			SEL = KPD_u8GetPressedKey(key_pad_port,LOW_NIBBLE,HIGH_NIBBLE);
 		} while (SEL == 0xFF);
-		while (KPD_u8GetPressedKey(GPIOB,LOW_NIBBLE,HIGH_NIBBLE) == SEL);
+		while (KPD_u8GetPressedKey(key_pad_port,LOW_NIBBLE,HIGH_NIBBLE) == SEL);
 		_delay_ms(100);
 		return SEL;
 }
@@ -808,12 +825,11 @@ u8 getFromKeypad(){
 u32 arrToInt(char* arr,char i){
 
 	u32 num=0;
-	char j=i-1;
+	unsigned char j=i-1;
 	for (j ; j>=0 ; j--){
 		if(arr[j]=='\0'){
 			break;
 		}
-		
 		num+= (arr[j]-48) *(myPow(10,i-j-1));
 	}
 	return num;
@@ -853,12 +869,12 @@ void Init(void)
 {
 	srand(time(NULL));
 	LCD_vidInit4bit();
-	KPD_vidInit(GPIOB,LOW_NIBBLE,HIGH_NIBBLE);
+	KPD_vidInit(key_pad_port,LOW_NIBBLE,HIGH_NIBBLE);
 	DIO_vidSetPinMode(GPIOC,PIN0,OUTPUT);
 	DIO_vidWritePin(GPIOC,PIN0,LOW);
-	DIO_vidSetPinMode(GPIOA,PIN4,OUTPUT);
-	DIO_vidWritePin(GPIOA,PIN4,LOW);
-	DIO_vidSetLowNibbleMode(GPIOA,OUTPUT);
+	DIO_vidSetPinMode(buz_port,buz_pin,OUTPUT);
+	DIO_vidWritePin(buz_port,buz_pin,LOW);
+	DIO_vidSetPortMode(sev_seg_port,OUTPUT);
 }
 
 u8 triesCount(u8 try)
@@ -866,7 +882,7 @@ u8 triesCount(u8 try)
 
     u8 returnVal = 1;
 	tries--;
-    DIO_vidWriteLowNibble(GPIOA,--try);
+    DIO_vidWritePort(sev_seg_port,char_arr[--try]);
     if (try == 0)
     {
     	LCD_voidDisplayString4bit("You have no ");
@@ -874,13 +890,13 @@ u8 triesCount(u8 try)
     	LCD_voidDisplayString4bit("tries left");
     	_delay_ms(500);
     	tries = 3;
-        DIO_vidWriteLowNibble(GPIOA,tries);
+        DIO_vidWritePort(sev_seg_port,char_arr[tries]);
     	returnVal = 0;
     }else{
 		LCD_voidDisplayString4bit("Try Again !");
-		DIO_vidWritePin(GPIOA,PIN4,HIGH);
+		DIO_vidWritePin(buz_port,buz_pin,HIGH);
 		_delay_ms(500);
-		DIO_vidWritePin(GPIOA,PIN4,LOW);
+		DIO_vidWritePin(buz_port,buz_pin,LOW);
 	}
     return returnVal;
 }
